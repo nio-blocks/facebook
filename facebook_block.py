@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from math import ceil
 from urllib.request import quote
-from http_blocks.rest.rest_block import RESTPolling
+from .http_blocks.rest.rest_block import RESTPolling
 from nio.metadata.properties.string import StringProperty
 from nio.metadata.properties.int import IntProperty
 from nio.metadata.properties.bool import BoolProperty
@@ -105,7 +105,6 @@ class FacebookBlock(RESTPolling):
             # the page is outside of the window defined above, we don't
             # need to do any more paging.
             if len(posts) < self.limit or self._prev_freshest > stalest:
-                print(paging)
                 paging = False
 
                 # filter out stale posts
