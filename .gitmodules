@@ -1,0 +1,3 @@
+[submodule "http_blocks"]
+	path = http_blocks
+	url = git@github.com:nio-blocks/http_blocks.git
