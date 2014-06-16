@@ -109,7 +109,6 @@ class FacebookBlock(RESTPolling):
 
                 # filter out stale posts
                 posts = self._find_fresh_posts(posts)
-                print([p['id'] for p in posts])
 
             if len(posts) > 0:
                 self._prev_stalest = self._created_epoch(posts[-1])
