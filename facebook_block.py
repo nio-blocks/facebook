@@ -97,7 +97,7 @@ class FacebookBlock(RESTPolling):
             # accordingly and store its previous value. Now the window of
             # fresh (i.e. desirable) are defined as having timestamps btwn
             # self._prev_freshest and self._freshest.
-            if freshest > self._freshest:
+            if self._poll_job is not None:
                 self._prev_freshest = self._freshest
                 self._freshest = freshest
 
@@ -109,6 +109,10 @@ class FacebookBlock(RESTPolling):
 
                 # filter out stale posts
                 posts = self._find_fresh_posts(posts)
+                print([p['id'] for p in posts])
+
+            if len(posts) > 0:
+                self._prev_stalest = self._created_epoch(posts[-1])
 
         signals = [FacebookSignal(p) for p in posts]
         self._logger.debug("Found %d fresh posts" % len(signals))
@@ -116,7 +120,6 @@ class FacebookBlock(RESTPolling):
         # record the unix timestamp for the least recent post on the
         # current page. this is used to fill the 'until' parameter
         # while paging through results.
-        self._prev_stalest = self._created_epoch(posts[-1])
         return signals, paging
 
     def _request_access_token(self):
