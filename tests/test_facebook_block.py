@@ -47,20 +47,24 @@ class TestFacebook(NIOBlockTestCase):
         blk = FBTestBlk(e)
         blk._authenticate = MagicMock()
         self.configure_block(blk, {
+            "log_level": "DEBUG",
             "polling_interval": {
                 "seconds": 1
             },
             "retry_interval": {
                 "seconds": 1
             },
+            "phrases": [
+                "foobar"
+            ],
             "limit": 1
         })
-        blk._freshest = 22
+        blk._freshest = [22]
 
         blk.start()
         e.wait(2)
 
-        self.assertEqual(blk._freshest, 23)
+        self.assertEqual(blk._freshest, [23])
         self.assert_num_signals_notified(1)
 
         blk.stop()
