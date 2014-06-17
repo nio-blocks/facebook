@@ -5,6 +5,7 @@ from datetime import datetime
 from math import ceil
 from urllib.request import quote
 from .http_blocks.rest.rest_block import RESTPolling
+from nio.metadata.properties.list import ListProperty
 from nio.metadata.properties.string import StringProperty
 from nio.metadata.properties.int import IntProperty
 from nio.metadata.properties.bool import BoolProperty
@@ -37,7 +38,7 @@ class FacebookBlock(RESTPolling):
                         "/access_token?client_id={0}&client_secret={1}"
                         "&grant_type=client_credentials")
 
-    phrase = StringProperty(default='')
+    phrases = ListProperty(str)
     limit = IntProperty(default=100)
     lookback = TimeDeltaProperty()
 
@@ -52,7 +53,13 @@ class FacebookBlock(RESTPolling):
 
     def configure(self, context):
         super().configure(context)
-        self._freshest = self._unix_time(datetime.utcnow() - self.lookback)
+        self._endpoints = len(self.phrases)
+        self._urls *= self._endpoints
+        self._paging_urls *= self._endpoints
+        lb = self._unix_time(datetime.utcnow() - self.lookback)
+        self._freshest = [lb] * self._endpoints
+        self._prev_freshest = [None] * self._endpoints
+        self._prev_stalest = [None] * self._endpoints
 
     def _authenticate(self):
         """ Overridden from the RESTPolling block.
@@ -98,21 +105,21 @@ class FacebookBlock(RESTPolling):
             # fresh (i.e. desirable) are defined as having timestamps btwn
             # self._prev_freshest and self._freshest.
             if self._poll_job is not None:
-                self._prev_freshest = self._freshest
-                self._freshest = freshest
+                self._prev_freshest[self._idx] = self._freshest[self._idx]
+                self._freshest[self._idx] = freshest
 
             # if the current page is not full or the least recent post on
             # the page is outside of the window defined above, we don't
             # need to do any more paging.
-            if len(posts) < self.limit or self._prev_freshest > stalest:
+            if len(posts) < self.limit or \
+               self._prev_freshest[self._idx] > stalest:
                 paging = False
 
                 # filter out stale posts
                 posts = self._find_fresh_posts(posts)
-                print([p['id'] for p in posts])
 
             if len(posts) > 0:
-                self._prev_stalest = self._created_epoch(posts[-1])
+                self._prev_stalest[self._idx] = self._created_epoch(posts[-1])
 
         signals = [FacebookSignal(p) for p in posts]
         self._logger.debug("Found %d fresh posts" % len(signals))
@@ -163,7 +170,7 @@ class FacebookBlock(RESTPolling):
         # filter out those posts which are less recent than the
         # self._prev_freshest.
         posts = [p for p in posts \
-                 if self._created_epoch(p) > self._prev_freshest]
+                 if self._created_epoch(p) > self._prev_freshest[self._idx]]
         return posts
         
     def _prepare_url(self, paging=False):
@@ -182,12 +189,15 @@ class FacebookBlock(RESTPolling):
         """
         fmt = "%s&access_token=%s" % (self.URL_FORMAT, self._access_token)
         if not paging:
-            self._url = fmt.format(self._freshest - 2, 
-                                   quote(self.phrase), 
-                                   self.limit)
+            self._paging_urls[self._idx] = None
+            url = fmt.format(self._freshest[self._idx] - 2, 
+                             quote(self.phrases[self._idx]), 
+                             self.limit)
+            self._urls[self._idx] = url
         else:
-            self._url = "%s&until=%d" % \
-                               (self._url, self._prev_stalest)
+            url = self._urls[self._idx]
+            url = "%s&until=%d" % (url, self._prev_stalest[self._idx])
+            self._paging_urls[self._idx] = url
 
     def _created_epoch(self, post):
         """ Helper function to return the second since the epoch
