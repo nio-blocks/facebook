@@ -3,14 +3,25 @@ import json
 import re
 from datetime import datetime
 from math import ceil
-from urllib.request import quote
 from .http_blocks.rest.rest_block import RESTPolling
 from nio.metadata.properties.list import ListProperty
 from nio.metadata.properties.string import StringProperty
 from nio.metadata.properties.int import IntProperty
 from nio.metadata.properties.bool import BoolProperty
 from nio.metadata.properties.timedelta import TimeDeltaProperty
+from nio.metadata.properties.holder import PropertyHolder
+from nio.metadata.properties.object import ObjectProperty
 from nio.common.signal.base import Signal
+
+
+class OAuthCreds(PropertyHolder):
+    """ Property holder for Twitter OAuth credentials.
+
+    """
+    consumer_key = StringProperty(default=None)
+    app_secret = StringProperty(default=None)
+    oauth_token = StringProperty(default=None)
+    oauth_token_secret = StringProperty(default=None)
 
 
 class FacebookSignal(Signal):
@@ -38,28 +49,15 @@ class FacebookBlock(RESTPolling):
                         "/access_token?client_id={0}&client_secret={1}"
                         "&grant_type=client_credentials")
 
-    phrases = ListProperty(str)
-    limit = IntProperty(default=100)
-    lookback = TimeDeltaProperty()
+    creds = ObjectProperty(OAuthCreds)
+
 
     def __init__(self):
         super().__init__()
         self._url = None
         self._paging_field = "paging"
+        self._created_field = "created_time"
         self._access_token = None
-        self._freshest = None
-        self._prev_freshest = None
-        self._prev_stalest = None
-
-    def configure(self, context):
-        super().configure(context)
-        self._endpoints = len(self.phrases)
-        self._urls *= self._endpoints
-        self._paging_urls *= self._endpoints
-        lb = self._unix_time(datetime.utcnow() - self.lookback)
-        self._freshest = [lb] * self._endpoints
-        self._prev_freshest = [None] * self._endpoints
-        self._prev_stalest = [None] * self._endpoints
 
     def _authenticate(self):
         """ Overridden from the RESTPolling block.
@@ -87,46 +85,24 @@ class FacebookBlock(RESTPolling):
         """
         signals = []
         resp = resp.json()
-        posts = resp['data']
+        fresh_posts = posts = resp['data']
         paging = resp.get(self._paging_field) is not None
         self._logger.debug("Facebook response contains %d posts" % len(posts))
 
         # we shouldn't see empty responses, but we'll protect our necks.
         if len(posts) > 0:
+            self.update_freshness(posts)
+            fresh_posts = self.find_fresh_posts(posts)
+            paging = len(fresh_posts) == self.limit
 
-            # timestamps for the most and least recent posts on the
-            # current page, respectively.
-            freshest = self._created_epoch(posts[0])
-            stalest = self._created_epoch(posts[-1])
+            # store the timestamp of the oldest fresh post for use in url
+            # preparation later.
+            if len(fresh_posts) > 0:
+                self.prev_stalest = self.created_epoch(fresh_posts[-1])
 
-            # if the most recent post on the current page is more recent
-            # than the most recent post notified so far, set self._freshest
-            # accordingly and store its previous value. Now the window of
-            # fresh (i.e. desirable) are defined as having timestamps btwn
-            # self._prev_freshest and self._freshest.
-            if self._poll_job is not None:
-                self._prev_freshest[self._idx] = self._freshest[self._idx]
-                self._freshest[self._idx] = freshest
-
-            # if the current page is not full or the least recent post on
-            # the page is outside of the window defined above, we don't
-            # need to do any more paging.
-            if len(posts) < self.limit or \
-               self._prev_freshest[self._idx] > stalest:
-                paging = False
-
-                # filter out stale posts
-                posts = self._find_fresh_posts(posts)
-
-            if len(posts) > 0:
-                self._prev_stalest[self._idx] = self._created_epoch(posts[-1])
-
-        signals = [FacebookSignal(p) for p in posts]
+        signals = [FacebookSignal(p) for p in fresh_posts]
         self._logger.debug("Found %d fresh posts" % len(signals))
         
-        # record the unix timestamp for the least recent post on the
-        # current page. this is used to fill the 'until' parameter
-        # while paging through results.
         return signals, paging
 
     def _request_access_token(self):
@@ -156,73 +132,30 @@ class FacebookBlock(RESTPolling):
                 "Facebook token request failed with status %d" % status
             )
         return token
-
-    def _find_fresh_posts(self, posts):
-        """ Return only those posts which are guaranteed to be fresh.
-        
-        Args:
-            posts (list(dict))
-
-        Returns:
-            posts (list(dict)): Stale posts are filtered out.
-
-        """
-        # filter out those posts which are less recent than the
-        # self._prev_freshest.
-        posts = [p for p in posts \
-                 if self._created_epoch(p) > self._prev_freshest[self._idx]]
-        return posts
         
     def _prepare_url(self, paging=False):
         """ Overridden from RESTPolling block.
 
-        Appends the access token to the format string. If paging, we do some
-        string interpolation to get our arguments into the request url.
-        Otherwise, we append the until parameter to the end.
+        Appends the access token to the format string and builds the headers
+        dictionary. If paging, we do some string interpolation to get our
+        arguments into the request url. Otherwise, we append the until parameter 
+        to the end.
 
         Args:
             paging (bool): Are we paging?
 
         Returns:
-            None
+            headers (dict): Contains the (case sensitive) http headers.
 
         """
+        headers = {"Content-Type": "application/json"}
         fmt = "%s&access_token=%s" % (self.URL_FORMAT, self._access_token)
         if not paging:
-            self._paging_urls[self._idx] = None
-            url = fmt.format(self._freshest[self._idx] - 2, 
-                             quote(self.phrases[self._idx]), 
-                             self.limit)
-            self._urls[self._idx] = url
+            self.paging_url = None
+            self.url = fmt.format(self.freshest - 2, 
+                                  self.current_query, 
+                                  self.limit)
         else:
-            url = self._urls[self._idx]
-            url = "%s&until=%d" % (url, self._prev_stalest[self._idx])
-            self._paging_urls[self._idx] = url
+            self.paging_url = "%s&until=%d" % (self.url, self.prev_stalest)
 
-    def _created_epoch(self, post):
-        """ Helper function to return the second since the epoch
-        for the given post's 'created_time.
-
-        Args:
-            post (dict): Should contain a 'created_time' key.
-        
-        Returns:
-            seconds (int): post[created_time] in seconds since epoch.
-        
-        """
-        dt = self._parse_date(post.get('created_time', ''))
-        return self._unix_time(dt)
-        
-    def _parse_date(self, date):
-        """ Parse facebook's date string into a datetime.datetime.
-
-        """
-        exp = r"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})"
-        m = re.match(exp, date)
-        return datetime(*[int(n) for n in m.groups(0)])
-
-    def _unix_time(self, dt):
-        epoch = datetime.utcfromtimestamp(0)
-        delta = dt - epoch
-        return int(delta.total_seconds())
-        
+        return headers

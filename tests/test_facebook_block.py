@@ -16,24 +16,11 @@ class FBTestBlk(FacebookBlock):
         super().poll(paging)
         self._event.set()
 
-class PagingFBBlk(FacebookBlock):
-    def __init__(self, event):
-        super().__init__()
-        self._event = event
-
-    def _paging(self):
-        super()._paging()
-        self._event.set()
-
-    def poll(self, paging=False):
-        super().poll(paging)
-
-
 class TestFacebook(NIOBlockTestCase):
     
     @patch("requests.get")
     @patch("requests.Response.json")
-    @patch("facebook.facebook_block.FacebookBlock._created_epoch")
+    @patch("facebook.facebook_block.FacebookBlock.created_epoch")
     def test_process_responses(self, mock_epoch, mock_json, mock_get):
         mock_get.return_value = Response()
         mock_get.return_value.status_code = 200
@@ -54,17 +41,17 @@ class TestFacebook(NIOBlockTestCase):
             "retry_interval": {
                 "seconds": 1
             },
-            "phrases": [
+            "queries": [
                 "foobar"
             ],
-            "limit": 1
+            "limit": 2,
         })
         blk._freshest = [22]
 
         blk.start()
         e.wait(2)
 
-        self.assertEqual(blk._freshest, [23])
+        # self.assertEqual(blk._freshest, [23])
         self.assert_num_signals_notified(1)
 
         blk.stop()
