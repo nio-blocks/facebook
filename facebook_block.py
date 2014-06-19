@@ -1,16 +1,9 @@
 import requests
-import json
-import re
-from datetime import datetime
-from math import ceil
+from nio.common.discovery import Discoverable, DiscoverableType
 from .http_blocks.rest.rest_block import RESTPolling
-from nio.metadata.properties.list import ListProperty
 from nio.metadata.properties.string import StringProperty
-from nio.metadata.properties.int import IntProperty
-from nio.metadata.properties.bool import BoolProperty
-from nio.metadata.properties.timedelta import TimeDeltaProperty
-from nio.metadata.properties.holder import PropertyHolder
 from nio.metadata.properties.object import ObjectProperty
+from nio.metadata.properties.holder import PropertyHolder
 from nio.common.signal.base import Signal
 
 
@@ -30,6 +23,7 @@ class FacebookSignal(Signal):
         for k in data:
             setattr(self, k, data[k])
 
+@Discoverable(DiscoverableType.block)
 class FacebookBlock(RESTPolling):
     """ This block polls the Facebook Graph API, searching for posts 
     matching a configurable phrase. 
