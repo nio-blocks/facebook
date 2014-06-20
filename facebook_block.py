@@ -1,9 +1,12 @@
 import requests
+from datetime import datetime
 from nio.common.discovery import Discoverable, DiscoverableType
 from .http_blocks.rest.rest_block import RESTPolling
 from nio.metadata.properties.string import StringProperty
 from nio.metadata.properties.object import ObjectProperty
 from nio.metadata.properties.holder import PropertyHolder
+from nio.metadata.properties.timedelta import TimeDeltaProperty
+from nio.metadata.properties.int import IntProperty
 from nio.common.signal.base import Signal
 
 
@@ -44,7 +47,8 @@ class FacebookBlock(RESTPolling):
                         "&grant_type=client_credentials")
 
     creds = ObjectProperty(OAuthCreds)
-
+    lookback = TimeDeltaProperty()
+    limit = IntProperty(default=10)
 
     def __init__(self):
         super().__init__()
@@ -52,6 +56,12 @@ class FacebookBlock(RESTPolling):
         self._paging_field = "paging"
         self._created_field = "created_time"
         self._access_token = None
+
+    def configure(self, context):
+        super().configure(context)
+        lb = self._unix_time(datetime.utcnow() - self.lookback)
+        self._freshest = [lb] * self._n_queries
+
 
     def _authenticate(self):
         """ Overridden from the RESTPolling block.
