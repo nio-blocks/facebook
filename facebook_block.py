@@ -14,10 +14,10 @@ class OAuthCreds(PropertyHolder):
     """ Property holder for Twitter OAuth credentials.
 
     """
-    consumer_key = StringProperty(default=None)
-    app_secret = StringProperty(default=None)
-    oauth_token = StringProperty(default=None)
-    oauth_token_secret = StringProperty(default=None)
+    consumer_key = StringProperty()
+    app_secret = StringProperty()
+    oauth_token = StringProperty()
+    oauth_token_secret = StringProperty()
 
 
 class FacebookSignal(Signal):
