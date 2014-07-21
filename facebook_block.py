@@ -46,7 +46,7 @@ class FacebookBlock(RESTPolling):
                         "/access_token?client_id={0}&client_secret={1}"
                         "&grant_type=client_credentials")
 
-    creds = ObjectProperty(title='Credentials', OAuthCreds)
+    creds = ObjectProperty(OAuthCreds, title='Credentials')
     lookback = TimeDeltaProperty(title='Lookback')
     limit = IntProperty(title='Limit (per poll)', default=10)
 
