@@ -14,10 +14,10 @@ class OAuthCreds(PropertyHolder):
     """ Property holder for Twitter OAuth credentials.
 
     """
-    consumer_key = StringProperty()
-    app_secret = StringProperty()
-    oauth_token = StringProperty()
-    oauth_token_secret = StringProperty()
+    consumer_key = StringProperty(title='Consumer Key', )
+    app_secret = StringProperty(title='App Secret', )
+    oauth_token = StringProperty(title='OAuth Token', )
+    oauth_token_secret = StringProperty(title='OAuth Secret', )
 
 
 class FacebookSignal(Signal):
@@ -46,9 +46,9 @@ class FacebookBlock(RESTPolling):
                         "/access_token?client_id={0}&client_secret={1}"
                         "&grant_type=client_credentials")
 
-    creds = ObjectProperty(OAuthCreds)
-    lookback = TimeDeltaProperty()
-    limit = IntProperty(default=10)
+    creds = ObjectProperty(title='Credentials', OAuthCreds)
+    lookback = TimeDeltaProperty(title='Lookback')
+    limit = IntProperty(title='Limit (per poll)', default=10)
 
     def __init__(self):
         super().__init__()
