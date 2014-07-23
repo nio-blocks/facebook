@@ -1,7 +1,7 @@
+from ..facebook_block import FacebookBlock
 from unittest.mock import patch, MagicMock
 from requests import Response
 from datetime import datetime, timedelta
-from facebook.facebook_block import FacebookBlock
 from nio.util.support.block_test_case import NIOBlockTestCase
 from nio.modules.threading import Event
 
