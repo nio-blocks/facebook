@@ -1,13 +1,13 @@
 import requests
 from datetime import datetime
 from nio.common.discovery import Discoverable, DiscoverableType
-from .http_blocks.rest.rest_block import RESTPolling
 from nio.metadata.properties.string import StringProperty
 from nio.metadata.properties.object import ObjectProperty
 from nio.metadata.properties.holder import PropertyHolder
 from nio.metadata.properties.timedelta import TimeDeltaProperty
 from nio.metadata.properties.int import IntProperty
 from nio.common.signal.base import Signal
+from http_blocks.rest.rest_block import RESTPolling
 
 
 class OAuthCreds(PropertyHolder):
@@ -21,8 +21,8 @@ class OAuthCreds(PropertyHolder):
 
 
 class FacebookSignal(Signal):
-    
     def __init__(self, data):
+        super().__init__()
         for k in data:
             setattr(self, k, data[k])
 
