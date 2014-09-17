@@ -21,8 +21,8 @@ class OAuthCreds(PropertyHolder):
 
 
 class FacebookSignal(Signal):
-    
     def __init__(self, data):
+        super().__init__()
         for k in data:
             setattr(self, k, data[k])
 

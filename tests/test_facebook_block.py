@@ -1,10 +1,8 @@
 from ..facebook_block import FacebookBlock
 from unittest.mock import patch, MagicMock
 from requests import Response
-from datetime import datetime, timedelta
 from nio.util.support.block_test_case import NIOBlockTestCase
 from nio.modules.threading import Event
-
 
 
 class FBTestBlk(FacebookBlock):
@@ -15,6 +13,7 @@ class FBTestBlk(FacebookBlock):
     def poll(self, paging=False):
         super().poll(paging)
         self._event.set()
+
 
 class TestFacebook(NIOBlockTestCase):
     
