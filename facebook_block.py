@@ -10,14 +10,12 @@ from nio.metadata.properties.int import IntProperty
 from nio.common.signal.base import Signal
 
 
-class OAuthCreds(PropertyHolder):
-    """ Property holder for Twitter OAuth credentials.
+class Creds(PropertyHolder):
+    """ Property holder for Facebook credentials.
 
     """
-    consumer_key = StringProperty(title='Consumer Key', )
-    app_secret = StringProperty(title='App Secret', )
-    oauth_token = StringProperty(title='OAuth Token', )
-    oauth_token_secret = StringProperty(title='OAuth Secret', )
+    consumer_key = StringProperty(title='App ID', default='[[FACEBOOK_APP_ID]]')
+    app_secret = StringProperty(title='App Secret', default='[[FACEBOOK_APP_SECRET]]')
 
 
 class FacebookSignal(Signal):
@@ -28,14 +26,14 @@ class FacebookSignal(Signal):
 
 @Discoverable(DiscoverableType.block)
 class FacebookBlock(RESTPolling):
-    """ This block polls the Facebook Graph API, searching for posts 
-    matching a configurable phrase. 
+    """ This block polls the Facebook Graph API, searching for posts
+    matching a configurable phrase.
 
     Params:
         phrase (str): The phrase with which to search posts. Need not be
             url-quoted.
         limit (int): Maximum number of posts contained in each response.
-        lookback (timedelta): Initial window of desirable posts (for the 
+        lookback (timedelta): Initial window of desirable posts (for the
             very first request.
 
     """
@@ -46,7 +44,7 @@ class FacebookBlock(RESTPolling):
                         "/access_token?client_id={0}&client_secret={1}"
                         "&grant_type=client_credentials")
 
-    creds = ObjectProperty(OAuthCreds, title='Credentials')
+    creds = ObjectProperty(Creds, title='Credentials')
     lookback = TimeDeltaProperty(title='Lookback')
     limit = IntProperty(title='Limit (per poll)', default=10)
 
@@ -73,13 +71,13 @@ class FacebookBlock(RESTPolling):
             self._logger.error("You need a consumer key and app secret, yo")
         else:
             self._access_token = self._request_access_token()
-        
+
     def _process_response(self, resp):
         """ Extract fresh posts from the Facebook graph api response object.
 
         Args:
             resp (Response)
-        
+
         Returns:
             signals (list(Signal)): The list of signals to notify, each of
                 which corresponds to a fresh FB post.
@@ -106,7 +104,7 @@ class FacebookBlock(RESTPolling):
 
         signals = [FacebookSignal(p) for p in fresh_posts]
         self._logger.debug("Found %d fresh posts" % len(signals))
-        
+
         return signals, paging
 
     def _request_access_token(self):
@@ -136,13 +134,13 @@ class FacebookBlock(RESTPolling):
                 "Facebook token request failed with status %d" % status
             )
         return token
-        
+
     def _prepare_url(self, paging=False):
         """ Overridden from RESTPolling block.
 
         Appends the access token to the format string and builds the headers
         dictionary. If paging, we do some string interpolation to get our
-        arguments into the request url. Otherwise, we append the until parameter 
+        arguments into the request url. Otherwise, we append the until parameter
         to the end.
 
         Args:
@@ -156,8 +154,8 @@ class FacebookBlock(RESTPolling):
         fmt = "%s&access_token=%s" % (self.URL_FORMAT, self._access_token)
         if not paging:
             self.paging_url = None
-            self.url = fmt.format(self.freshest - 2, 
-                                  self.current_query, 
+            self.url = fmt.format(self.freshest - 2,
+                                  self.current_query,
                                   self.limit)
         else:
             self.paging_url = "%s&until=%d" % (self.url, self.prev_stalest)
