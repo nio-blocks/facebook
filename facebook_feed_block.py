@@ -1,13 +1,22 @@
 import requests
+from enum import Enum
 from datetime import datetime
 from nio.common.discovery import Discoverable, DiscoverableType
 from .http_blocks.rest.rest_block import RESTPolling
 from nio.metadata.properties.string import StringProperty
 from nio.metadata.properties.object import ObjectProperty
 from nio.metadata.properties.holder import PropertyHolder
+from nio.metadata.properties.select import SelectProperty
 from nio.metadata.properties.timedelta import TimeDeltaProperty
 from nio.metadata.properties.int import IntProperty
 from nio.common.signal.base import Signal
+
+
+class FeedType(Enum):
+    FEED = 0
+    POSTS = 1
+    TAGGED = 2
+    PROMOTABLE_POSTS = 3
 
 
 class Creds(PropertyHolder):
@@ -37,7 +46,7 @@ class FacebookFeed(RESTPolling):
 
     """
     URL_FORMAT = ("https://graph.facebook.com/v2.2/"
-                  "{}/feed?since={}&limit={}")
+                  "{}/{}?since={}&limit={}")
 
     TOKEN_URL_FORMAT = ("https://graph.facebook.com/oauth"
                         "/access_token?client_id={0}&client_secret={1}"
@@ -46,6 +55,10 @@ class FacebookFeed(RESTPolling):
     creds = ObjectProperty(Creds, title='Credentials', default=Creds())
     lookback = TimeDeltaProperty(title='Lookback')
     limit = IntProperty(title='Limit (per poll)', default=10)
+    feed_type = SelectProperty(
+        FeedType,
+        default=FeedType.FEED,
+        title='Feed Type')
 
     def __init__(self):
         super().__init__()
@@ -152,7 +165,15 @@ class FacebookFeed(RESTPolling):
         fmt = "%s&access_token=%s" % (self.URL_FORMAT, self._access_token)
         if not paging:
             self.paging_url = None
+            feed_type = \
+                'posts' if self.feed_type is FeedType.POSTS else \
+                'tagged' if self.feed_type is FeedType.TAGGED else \
+                'promotable_posts' if \
+                    self.feed_type is FeedType.PROMOTABLE_POSTS else \
+                'feed'
+
             self.url = fmt.format(self.current_query,
+                                  feed_type,
                                   self.freshest - 2,
                                   self.limit)
         else:
