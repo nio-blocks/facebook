@@ -13,10 +13,10 @@ from nio.common.signal.base import Signal
 
 
 class FeedType(Enum):
-    FEED = 0
-    POSTS = 1
-    TAGGED = 2
-    PROMOTABLE_POSTS = 3
+    FEED = 'feed'
+    POSTS = 'posts'
+    TAGGED = 'tagged'
+    PROMOTABLE_POSTS = 'promotable_posts'
 
 
 class Creds(PropertyHolder):
@@ -165,13 +165,7 @@ class FacebookFeed(RESTPolling):
         fmt = "%s&access_token=%s" % (self.URL_FORMAT, self._access_token)
         if not paging:
             self.paging_url = None
-            feed_type = \
-                'posts' if self.feed_type is FeedType.POSTS else \
-                'tagged' if self.feed_type is FeedType.TAGGED else \
-                'promotable_posts' if \
-                    self.feed_type is FeedType.PROMOTABLE_POSTS else \
-                'feed'
-
+            feed_type = self.feed_type.value
             self.url = fmt.format(self.current_query,
                                   feed_type,
                                   self.freshest - 2,
