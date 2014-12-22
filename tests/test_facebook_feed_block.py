@@ -19,7 +19,7 @@ class TestFacebookFeed(NIOBlockTestCase):
 
     @patch("requests.get")
     @patch("requests.Response.json")
-    @patch("facebook.facebook_feed_block.FacebookFeed.created_epoch")
+    @patch.object(FacebookFeed, "created_epoch")
     def test_process_responses(self, mock_epoch, mock_json, mock_get):
         mock_get.return_value = Response()
         mock_get.return_value.status_code = 200
