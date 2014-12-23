@@ -16,10 +16,10 @@ class FBTestBlk(FacebookBlock):
 
 
 class TestFacebook(NIOBlockTestCase):
-    
+
     @patch("requests.get")
     @patch("requests.Response.json")
-    @patch("facebook.facebook_block.FacebookBlock.created_epoch")
+    @patch.object(FacebookBlock, "created_epoch")
     def test_process_responses(self, mock_epoch, mock_json, mock_get):
         mock_get.return_value = Response()
         mock_get.return_value.status_code = 200
@@ -54,6 +54,6 @@ class TestFacebook(NIOBlockTestCase):
         self.assert_num_signals_notified(1)
 
         blk.stop()
-        
 
-    
+
+
