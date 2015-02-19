@@ -189,7 +189,7 @@ class FacebookFeed(RESTPolling):
             err_code = resp.get('error', {}).get('code')
             if status_code == 404 and \
                err_code in [803]:
-                self._logger.debug(
+                self._logger.warning(
                     "Skipping feed: {}".format(self.current_query))
                 execute_retry = False
                 self._increment_idx()

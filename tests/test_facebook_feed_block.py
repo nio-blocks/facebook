@@ -83,7 +83,7 @@ class TestFacebookFeed(NIOBlockTestCase):
         self.assertEqual(blk.url, prepare_url(blk, 'promotable_posts'))
 
     @patch.object(RESTPolling, "_retry")
-    @patch.object(RESTPolling, "_authenticate")
+    @patch.object(FacebookFeed, "_authenticate")
     @patch("requests.get")
     def test_username_query(self, mock_get, mock_auth, mock_retry):
         """ username queries get a 404 from Facebook """
@@ -110,7 +110,7 @@ class TestFacebookFeed(NIOBlockTestCase):
         self.assertEqual(1, blk._idx)
 
     @patch.object(RESTPolling, "_retry")
-    @patch.object(RESTPolling, "_authenticate")
+    @patch.object(FacebookFeed, "_authenticate")
     @patch("requests.get")
     def test_retry(self, mock_get, mock_auth, mock_retry):
         """ username queries get a 404 from Facebook """
