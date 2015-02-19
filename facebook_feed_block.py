@@ -20,21 +20,27 @@ class FeedType(Enum):
 
 
 class Creds(PropertyHolder):
+
     """ Property holder for Facebook credentials.
 
     """
     consumer_key = StringProperty(title='App ID', default='[[FACEBOOK_APP_ID]]')
-    app_secret = StringProperty(title='App Secret', default='[[FACEBOOK_APP_SECRET]]')
+    app_secret = StringProperty(
+        title='App Secret',
+        default='[[FACEBOOK_APP_SECRET]]')
 
 
 class FacebookSignal(Signal):
+
     def __init__(self, data):
         super().__init__()
         for k in data:
             setattr(self, k, data[k])
 
+
 @Discoverable(DiscoverableType.block)
 class FacebookFeed(RESTPolling):
+
     """ This block polls the Facebook Graph API, using the feed endpoint
 
     Params:
@@ -174,3 +180,23 @@ class FacebookFeed(RESTPolling):
             self.paging_url = "%s&until=%d" % (self.url, self.prev_stalest)
 
         return headers
+
+    def _on_failure(self, resp, paging, url):
+        execute_retry = True
+        try:
+            status_code = resp.status_code
+            resp = resp.json()
+            err_code = resp.get('error', {}).get('code')
+            if status_code == 404 and \
+               err_code in [803]:
+                self._logger.debug(
+                    "Skipping feed: {}".format(self.current_query))
+                execute_retry = False
+                self._increment_idx()
+        finally:
+            self._logger.error(
+                "Polling request of {} returned status {}: {}".format(
+                    url, status_code, resp)
+            )
+            if execute_retry:
+                self._retry(paging)
