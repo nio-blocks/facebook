@@ -187,8 +187,12 @@ class FacebookFeed(RESTPolling):
             status_code = resp.status_code
             resp = resp.json()
             err_code = resp.get('error', {}).get('code')
-            if status_code == 404 and \
-               err_code in [803]:
+            if status_code == 404 and err_code in [803]:
+                # Page feed requests require only an access token [1] but user
+                # feed requsts require a user access token with read_stream
+                # permission [2].
+                # [1]: https://developers.facebook.com/docs/graph-api/reference/v2.2/page/feed
+                # [2]: https://developers.facebook.com/docs/graph-api/reference/v2.2/user/feed
                 self._logger.warning(
                     "Skipping feed: {}".format(self.current_query))
                 execute_retry = False

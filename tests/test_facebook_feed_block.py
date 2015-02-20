@@ -86,7 +86,11 @@ class TestFacebookFeed(NIOBlockTestCase):
     @patch.object(FacebookFeed, "_authenticate")
     @patch("requests.get")
     def test_username_query(self, mock_get, mock_auth, mock_retry):
-        """ username queries get a 404 from Facebook """
+        """ username queries get a code 803 from Facebook
+
+        Queries for usernames are not allowed by the Facebook API. Instead of
+        retrying the query, these special errors should skip the query.
+        """
         blk = FacebookFeed()
         self.configure_block(blk, {
             "queries": [
@@ -113,7 +117,13 @@ class TestFacebookFeed(NIOBlockTestCase):
     @patch.object(FacebookFeed, "_authenticate")
     @patch("requests.get")
     def test_retry(self, mock_get, mock_auth, mock_retry):
-        """ username queries get a 404 from Facebook """
+        """ Retry query on bad status codes
+
+        On a bad status code, the RESTPolling block will retry the query
+        unless the response is special (ex. test_username_query). This test
+        makes sure that normal bad status codes retry the query instead of
+        skipping it.
+        """
         blk = FacebookFeed()
         self.configure_block(blk, {
             "queries": [
@@ -123,13 +133,6 @@ class TestFacebookFeed(NIOBlockTestCase):
         })
         mock_get.return_value = MagicMock()
         mock_get.return_value.status_code = 404
-        mock_get.return_value.json.return_value = \
-            {'error':
-             {'message': 'This is baaaaad',
-              'code': 666,
-              'type': 'OAuthException'
-              }
-             }
         self.assertEqual(0, blk._idx)
         blk.poll()
         # don't skip to next idx because we are retrying.
