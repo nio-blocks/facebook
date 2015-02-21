@@ -1,4 +1,5 @@
 from ..facebook_feed_block import FacebookFeed, FeedType
+from ..http_blocks.rest.rest_block import RESTPolling
 from unittest.mock import patch, MagicMock
 from requests import Response
 from nio.util.support.block_test_case import NIOBlockTestCase
@@ -6,6 +7,7 @@ from nio.modules.threading import Event
 
 
 class FBTestBlk(FacebookFeed):
+
     def __init__(self, event):
         super().__init__()
         self._event = event
@@ -57,12 +59,13 @@ class TestFacebookFeed(NIOBlockTestCase):
         self.configure_block(blk, {
             "queries": ["foobar"]
         })
+
         def prepare_url(blk, feed_type):
             return blk.URL_FORMAT.format(blk.queries[0],
                                          feed_type,
                                          blk.freshest - 2,
                                          blk.limit) + \
-                       "&access_token={}".format(blk._access_token)
+                "&access_token={}".format(blk._access_token)
         # default feed type
         blk._prepare_url()
         self.assertEqual(blk.url, prepare_url(blk, 'feed'))
@@ -78,3 +81,59 @@ class TestFacebookFeed(NIOBlockTestCase):
         blk.feed_type = FeedType.PROMOTABLE_POSTS
         blk._prepare_url()
         self.assertEqual(blk.url, prepare_url(blk, 'promotable_posts'))
+
+    @patch.object(RESTPolling, "_retry")
+    @patch.object(FacebookFeed, "_authenticate")
+    @patch("requests.get")
+    def test_username_query(self, mock_get, mock_auth, mock_retry):
+        """ username queries get a code 803 from Facebook
+
+        Queries for usernames are not allowed by the Facebook API. Instead of
+        retrying the query, these special errors should skip the query.
+        """
+        blk = FacebookFeed()
+        self.configure_block(blk, {
+            "queries": [
+                "username1",
+                "username2"
+            ]
+        })
+        mock_get.return_value = MagicMock()
+        mock_get.return_value.status_code = 404
+        mock_get.return_value.json.return_value = \
+            {'error':
+             {'message':
+              '(#803) Cannot query users by their username (username1)',
+              'code': 803,
+              'type': 'OAuthException'
+              }
+             }
+        self.assertEqual(0, blk._idx)
+        blk.poll()
+        # skip to next idx because we are not retrying.
+        self.assertEqual(1, blk._idx)
+
+    @patch.object(RESTPolling, "_retry")
+    @patch.object(FacebookFeed, "_authenticate")
+    @patch("requests.get")
+    def test_retry(self, mock_get, mock_auth, mock_retry):
+        """ Retry query on bad status codes
+
+        On a bad status code, the RESTPolling block will retry the query
+        unless the response is special (ex. test_username_query). This test
+        makes sure that normal bad status codes retry the query instead of
+        skipping it.
+        """
+        blk = FacebookFeed()
+        self.configure_block(blk, {
+            "queries": [
+                "username1",
+                "username2"
+            ]
+        })
+        mock_get.return_value = MagicMock()
+        mock_get.return_value.status_code = 404
+        self.assertEqual(0, blk._idx)
+        blk.poll()
+        # don't skip to next idx because we are retrying.
+        self.assertEqual(0, blk._idx)
