@@ -85,7 +85,7 @@ class TestFacebookFeed(NIOBlockTestCase):
     @patch.object(RESTPolling, "_retry")
     @patch.object(FacebookFeed, "_authenticate")
     @patch("requests.get")
-    def test_username_query(self, mock_get, mock_auth, mock_retry):
+    def test_bad_username_query(self, mock_get, mock_auth, mock_retry):
         """ username queries get a code 803 from Facebook
 
         Queries for usernames are not allowed by the Facebook API. Instead of
@@ -105,6 +105,70 @@ class TestFacebookFeed(NIOBlockTestCase):
              {'message':
               '(#803) Cannot query users by their username (username1)',
               'code': 803,
+              'type': 'OAuthException'
+              }
+             }
+        self.assertEqual(0, blk._idx)
+        blk.poll()
+        # skip to next idx because we are not retrying.
+        self.assertEqual(1, blk._idx)
+
+    @patch.object(RESTPolling, "_retry")
+    @patch.object(FacebookFeed, "_authenticate")
+    @patch("requests.get")
+    def test_bad_queries(self, mock_get, mock_auth, mock_retry):
+        """ Some queries give bad responses that should not be retried
+
+        Certain queries are not allowed by the Facebook API. Instead of
+        retrying the query, these special errors should skip the query.
+        """
+        blk = FacebookFeed()
+        self.configure_block(blk, {
+            "queries": [
+                "bad1",
+                "bad2"
+            ]
+        })
+        mock_get.return_value = MagicMock()
+        mock_get.return_value.status_code = 404
+        mock_get.return_value.json.return_value = \
+            {'error':
+             {'message':
+              'Unknown path components: /300969971064/posts',
+              'code': 2500,
+              'type': 'OAuthException'
+              }
+             }
+        self.assertEqual(0, blk._idx)
+        blk.poll()
+        # skip to next idx because we are not retrying.
+        self.assertEqual(1, blk._idx)
+
+    @patch.object(RESTPolling, "_retry")
+    @patch.object(FacebookFeed, "_authenticate")
+    @patch("requests.get")
+    def test_unexpected_erros(self, mock_get, mock_auth, mock_retry):
+        """ Sometimes unexpected errors occurs and they should be skipped
+
+        Sometimes unexpected erorrs occur. Instead of
+        retrying the query, these special errors should skip the query.
+        """
+        blk = FacebookFeed()
+        self.configure_block(blk, {
+            "queries": [
+                "hello",
+                "facebook"
+            ]
+        })
+        mock_get.return_value = MagicMock()
+        mock_get.return_value.status_code = 500
+        mock_get.return_value.json.return_value = \
+            {'error':
+             {'message':
+              'An unexpected error has occurred.'
+              ' Please retry your request later.',
+              'code': 2,
+              'is_transient': True,
               'type': 'OAuthException'
               }
              }
