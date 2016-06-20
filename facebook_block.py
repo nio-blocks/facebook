@@ -1,13 +1,13 @@
 import requests
 from datetime import datetime
-from nio.common.discovery import Discoverable, DiscoverableType
+from nio.util.discovery import discoverable
 from .http_blocks.rest.rest_block import RESTPolling
-from nio.metadata.properties.string import StringProperty
-from nio.metadata.properties.object import ObjectProperty
-from nio.metadata.properties.holder import PropertyHolder
-from nio.metadata.properties.timedelta import TimeDeltaProperty
-from nio.metadata.properties.int import IntProperty
-from nio.common.signal.base import Signal
+from nio.properties.string import StringProperty
+from nio.properties.object import ObjectProperty
+from nio.properties.holder import PropertyHolder
+from nio.properties.timedelta import TimeDeltaProperty
+from nio.properties.int import IntProperty
+from nio.signal.base import Signal
 
 
 class Creds(PropertyHolder):
@@ -24,7 +24,7 @@ class FacebookSignal(Signal):
         for k in data:
             setattr(self, k, data[k])
 
-@Discoverable(DiscoverableType.block)
+@discoverable
 class FacebookBlock(RESTPolling):
     """ This block polls the Facebook Graph API, searching for posts
     matching a configurable phrase.
@@ -44,8 +44,8 @@ class FacebookBlock(RESTPolling):
                         "/access_token?client_id={0}&client_secret={1}"
                         "&grant_type=client_credentials")
 
-    creds = ObjectProperty(Creds, title='Credentials')
-    lookback = TimeDeltaProperty(title='Lookback')
+    creds = ObjectProperty(Creds, title='Credentials', default=Creds())
+    lookback = TimeDeltaProperty(title='Lookback', default={"seconds": 0})
     limit = IntProperty(title='Limit (per poll)', default=10)
 
     def __init__(self):
@@ -57,7 +57,7 @@ class FacebookBlock(RESTPolling):
 
     def configure(self, context):
         super().configure(context)
-        lb = self._unix_time(datetime.utcnow() - self.lookback)
+        lb = self._unix_time(datetime.utcnow() - self.lookback())
         self._freshest = [lb] * self._n_queries
 
 
@@ -67,8 +67,9 @@ class FacebookBlock(RESTPolling):
         Generates and records the access token for pending requests.
 
         """
-        if self.creds.consumer_key is None or self.creds.app_secret is None:
-            self._logger.error("You need a consumer key and app secret, yo")
+        if self.creds().consumer_key() is None or \
+                self.creds().app_secret() is None:
+            self.logger.error("You need a consumer key and app secret, yo")
         else:
             self._access_token = self._request_access_token()
 
@@ -89,13 +90,13 @@ class FacebookBlock(RESTPolling):
         resp = resp.json()
         fresh_posts = posts = resp['data']
         paging = resp.get(self._paging_field) is not None
-        self._logger.debug("Facebook response contains %d posts" % len(posts))
+        self.logger.debug("Facebook response contains %d posts" % len(posts))
 
         # we shouldn't see empty responses, but we'll protect our necks.
         if len(posts) > 0:
             self.update_freshness(posts)
             fresh_posts = self.find_fresh_posts(posts)
-            paging = len(fresh_posts) == self.limit
+            paging = len(fresh_posts) == self.limit()
 
             # store the timestamp of the oldest fresh post for use in url
             # preparation later.
@@ -103,7 +104,7 @@ class FacebookBlock(RESTPolling):
                 self.prev_stalest = self.created_epoch(fresh_posts[-1])
 
         signals = [FacebookSignal(p) for p in fresh_posts]
-        self._logger.debug("Found %d fresh posts" % len(signals))
+        self.logger.debug("Found %d fresh posts" % len(signals))
 
         return signals, paging
 
@@ -118,7 +119,7 @@ class FacebookBlock(RESTPolling):
 
         """
         resp = requests.get(self.TOKEN_URL_FORMAT.format(
-            self.creds.consumer_key, self.creds.app_secret)
+            self.creds().consumer_key(), self.creds().app_secret())
         )
         status = resp.status_code
 
@@ -126,11 +127,12 @@ class FacebookBlock(RESTPolling):
         # and secret. This probably won't work, but the docs say that it
         # should. for more info, see:
         # https://developers.facebook.com/docs/facebook-login/access-tokens
-        token = "%s|%s" % (self.creds.consumer_key, self.creds.app_secret)
+        token = "%s|%s" % (self.creds().consumer_key(),
+                           self.creds().app_secret())
         if status == 200:
             token = resp.text.split('access_token=')[1]
         else:
-            self._logger.error(
+            self.logger.error(
                 "Facebook token request failed with status %d" % status
             )
         return token
@@ -156,7 +158,7 @@ class FacebookBlock(RESTPolling):
             self.paging_url = None
             self.url = fmt.format(self.freshest - 2,
                                   self.current_query,
-                                  self.limit)
+                                  self.limit())
         else:
             self.paging_url = "%s&until=%d" % (self.url, self.prev_stalest)
 
