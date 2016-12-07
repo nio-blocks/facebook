@@ -2,8 +2,8 @@ from ..facebook_feed_block import FacebookFeed, FeedType
 from ..http_blocks.rest.rest_block import RESTPolling
 from unittest.mock import patch, MagicMock
 from requests import Response
-from nio.util.support.block_test_case import NIOBlockTestCase
-from nio.modules.threading import Event
+from nio.testing.block_test_case import NIOBlockTestCase
+from threading import Event
 
 
 class FBTestBlk(FacebookFeed):
@@ -61,10 +61,10 @@ class TestFacebookFeed(NIOBlockTestCase):
         })
 
         def prepare_url(blk, feed_type):
-            return blk.URL_FORMAT.format(blk.queries[0],
+            return blk.URL_FORMAT.format(blk.queries()[0],
                                          feed_type,
                                          blk.freshest - 2,
-                                         blk.limit) + \
+                                         blk.limit()) + \
                 "&access_token={}".format(blk._access_token)
         # default feed type
         blk._prepare_url()

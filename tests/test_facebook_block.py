@@ -1,8 +1,8 @@
 from ..facebook_block import FacebookBlock
 from unittest.mock import patch, MagicMock
 from requests import Response
-from nio.util.support.block_test_case import NIOBlockTestCase
-from nio.modules.threading import Event
+from nio.testing.block_test_case import NIOBlockTestCase
+from threading import Event
 
 
 class FBTestBlk(FacebookBlock):
