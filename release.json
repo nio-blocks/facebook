@@ -1,0 +1,12 @@
+{
+  "nio/FacebookFeedBlock": {
+    "Language": "Python",
+    "Version": "1.0.0",
+    "Reference": "github.com/nio-blocks/facebook.git@v1.0.0"
+  },
+  "nio/FacebookBlock": {
+    "Language": "Python",
+    "Version": "1.0.0",
+    "Reference": "github.com/nio-blocks/facebook.git@v1.0.0"
+  }
+}

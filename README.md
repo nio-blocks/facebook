@@ -38,8 +38,9 @@ Creates a new signal for each Facebook Post. Every field on the Post will become
 -   from['name']
 -   created_time
 
+***
 
-FacebookBlock
+FacebookFeedBlock
 =============
 
 Polls Facebook for public posts via Graph API v1.0.
