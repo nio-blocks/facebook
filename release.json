@@ -1,5 +1,5 @@
 {
-  "nio/FacebookFeedBlock": {
+  "nio/FacebookFeed": {
     "Language": "Python",
     "Version": "1.0.0",
     "Reference": "github.com/nio-blocks/facebook.git@v1.0.0"
