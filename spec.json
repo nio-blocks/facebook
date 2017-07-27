@@ -34,7 +34,7 @@
         },
         "Commands": {}
     },
-    "nio/FacebookFeedBlock": {
+    "nio/FacebookFeed": {
         "Properties": {
             "queries": {
                 "description": "List of queries to public posts for. Note that multi-word queries will search for posts that have all of the words but not as a single string."

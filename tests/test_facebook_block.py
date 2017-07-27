@@ -2,9 +2,11 @@ from ..facebook_block import FacebookBlock
 from unittest.mock import patch, MagicMock
 from requests import Response
 from nio.testing.block_test_case import NIOBlockTestCase
+from nio.util.discovery import not_discoverable
 from threading import Event
 
 
+@not_discoverable
 class FBTestBlk(FacebookBlock):
     def __init__(self, event):
         super().__init__()

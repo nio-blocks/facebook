@@ -3,9 +3,11 @@ from ..http_blocks.rest.rest_block import RESTPolling
 from unittest.mock import patch, MagicMock
 from requests import Response
 from nio.testing.block_test_case import NIOBlockTestCase
+from nio.util.discovery import not_discoverable
 from threading import Event
 
 
+@not_discoverable
 class FBTestBlk(FacebookFeed):
 
     def __init__(self, event):
