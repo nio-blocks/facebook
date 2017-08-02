@@ -1,12 +1,12 @@
 {
-  "nio/FacebookFeed": {
-    "Language": "Python",
-    "Version": "1.0.0",
-    "Reference": "github.com/nio-blocks/facebook.git@v1.0.0"
-  },
   "nio/FacebookBlock": {
-    "Language": "Python",
-    "Version": "1.0.0",
-    "Reference": "github.com/nio-blocks/facebook.git@v1.0.0"
+    "language": "Python",
+    "version": "0.0.1",
+    "reference": "github.com/nio-blocks/facebook.git@v0.0.1"
+  },
+  "nio/FacebookFeed": {
+    "language": "Python",
+    "version": "0.0.1",
+    "reference": "github.com/nio-blocks/facebook.git@v0.0.1"
   }
 }

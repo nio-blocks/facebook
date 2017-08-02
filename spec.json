@@ -1,69 +1,18 @@
 {
-    "nio/FacebookBlock": {
-        "Properties": {
-            "queries": {
-                "description": "List of queries to public posts for. Note that multi-word queries will search for posts that have all of the words but not as a single string."
-            },
-            "polling_interval": {
-                "description": "How often Facebook is polled. When using more than one query. Each query will be polled at a period equal to the polling\\_interval times the number of queries."
-            },
-            "retry_interval": {
-                "description": "When a url request fails, how long to wait before attempting to try again."
-            },
-            "lookback": {
-                "description": "On block start, look back this amount of time to grab old posts."
-            },
-            "creds": {
-                "description": "Facebook API credentials."
-            },
-            "limit": {
-                "description": "Number of posts to come back on each url request to Facebook."
-            },
-            "feed_type": {
-                "description": "Select which enpoint you want. Defaults to the whole 'feed', but can be limited to just 'posts', 'tagged' or 'promotable_posts'."
-            }
-        },
-        "Output": {
-            "Description": "Creates a new signal for each Facebook Post. Every field on the Post will become a signal attribute. Details about the Facebook Posts can be found\n[here](https://developers.facebook.com/docs/graph-api/reference/v2.2/post). The following is a list of commonly include attributes, but note that not all will be included on every signal:\n-   type\n-   id\n-   message\n-   description\n-   link\n-   from['name']\n-   created_time"
-        },
-        "Description": "Polls the Facebook graph api ['feed' endpoint](https://developers.facebook.com/docs/graph-api/reference/v2.2/page/feed).\nTo test your *queries* for validity, enter them into the url:\n`https://www.facebook.com/query/feed`",
-        "Category": "WebService",
-        "Version": "1.0.0",
-        "Input": {
-            "Description": "None"
-        },
-        "Commands": {}
-    },
-    "nio/FacebookFeed": {
-        "Properties": {
-            "queries": {
-                "description": "List of queries to public posts for. Note that multi-word queries will search for posts that have all of the words but not as a single string."
-            },
-            "polling_interval": {
-                "description": "How often Facebook is polled. When using more than one query. Each query will be polled at a period equal to the polling\\_interval times the number of queries."
-            },
-            "retry_interval": {
-                "description": "When a url request fails, how long to wait before attempting to try again."
-            },
-            "lookback": {
-                "description": "On block start, look back this amount of time to grab old posts."
-            },
-            "creds": {
-                "description": "Facebook API credentials."
-            },
-            "limit": {
-                "description": "Number of posts to come back on each url request to Facebook."
-            }
-        },
-        "Output": {
-            "Description": "Creates a new signal for each Facebook Post. Every field on the Post will become a signal attribute. Details about the Facebook Posts can be found\n[here](https://developers.facebook.com/docs/graph-api/reference/v1.0/post). The following is a list of commonly include attributes, but note that not all will be included on every signal:\n-   type\n-   id\n-   message\n-   description\n-   link\n-   from['name']\n-   created_time"
-        },
-        "Description": "Polls Facebook for public posts via Graph API v1.0.",
-        "Category": "WebService",
-        "Version": "1.0.0",
-        "Input": {
-            "Description": "None"
-        },
-        "Commands": {}
-    }
+  "nio/FacebookBlock": {
+    "version": "0.0.1",
+    "description": "",
+    "inputs": {},
+    "outputs": {},
+    "properties": {},
+    "commands": {}
+  },
+  "nio/FacebookFeed": {
+    "version": "0.0.1",
+    "description": "",
+    "inputs": {},
+    "outputs": {},
+    "properties": {},
+    "commands": {}
+  }
 }
