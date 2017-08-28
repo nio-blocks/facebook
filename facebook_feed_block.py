@@ -2,7 +2,7 @@ import requests
 from enum import Enum
 from datetime import datetime
 from nio.util.discovery import discoverable
-from .http_blocks.rest.rest_block import RESTPolling
+from .rest_polling.rest_block import RESTPolling
 from nio.properties.string import StringProperty
 from nio.properties.object import ObjectProperty
 from nio.properties.holder import PropertyHolder

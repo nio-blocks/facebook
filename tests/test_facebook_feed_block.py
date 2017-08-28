@@ -1,5 +1,5 @@
 from ..facebook_feed_block import FacebookFeed, FeedType
-from ..http_blocks.rest.rest_block import RESTPolling
+from ..rest_polling.rest_block import RESTPolling
 from unittest.mock import patch, MagicMock
 from requests import Response
 from nio.testing.block_test_case import NIOBlockTestCase
