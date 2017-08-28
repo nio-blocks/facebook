@@ -1,15 +1,14 @@
 import requests
 from enum import Enum
 from datetime import datetime
+
 from nio.util.discovery import discoverable
-from .rest_polling.rest_block import RESTPolling
-from nio.properties.string import StringProperty
-from nio.properties.object import ObjectProperty
-from nio.properties.holder import PropertyHolder
-from nio.properties.select import SelectProperty
-from nio.properties.timedelta import TimeDeltaProperty
-from nio.properties.int import IntProperty
+from nio.properties import (StringProperty, ObjectProperty, PropertyHolder,
+                            SelectProperty, TimeDeltaProperty, IntProperty,
+                            VersionProperty)
 from nio.signal.base import Signal
+
+from .rest_polling.rest_block import RESTPolling
 
 
 class FeedType(Enum):
@@ -24,7 +23,8 @@ class Creds(PropertyHolder):
     """ Property holder for Facebook credentials.
 
     """
-    consumer_key = StringProperty(title='App ID', default='[[FACEBOOK_APP_ID]]')
+    consumer_key = StringProperty(title='App ID',
+                                  default='[[FACEBOOK_APP_ID]]')
     app_secret = StringProperty(
         title='App Secret',
         default='[[FACEBOOK_APP_SECRET]]')
@@ -53,7 +53,6 @@ class FacebookFeed(RESTPolling):
     """
     URL_FORMAT = ("https://graph.facebook.com/v2.2/"
                   "{}/{}?since={}&limit={}")
-
     TOKEN_URL_FORMAT = ("https://graph.facebook.com/oauth"
                         "/access_token?client_id={0}&client_secret={1}"
                         "&grant_type=client_credentials")
@@ -61,10 +60,9 @@ class FacebookFeed(RESTPolling):
     creds = ObjectProperty(Creds, title='Credentials', default=Creds())
     lookback = TimeDeltaProperty(title='Lookback', default={"seconds": 0})
     limit = IntProperty(title='Limit (per poll)', default=10)
-    feed_type = SelectProperty(
-        FeedType,
-        default=FeedType.FEED,
-        title='Feed Type')
+    feed_type = SelectProperty(FeedType, default=FeedType.FEED,
+                               title='Feed Type')
+    version = VersionProperty('1.0.0')
 
     def __init__(self):
         super().__init__()
@@ -159,8 +157,8 @@ class FacebookFeed(RESTPolling):
 
         Appends the access token to the format string and builds the headers
         dictionary. If paging, we do some string interpolation to get our
-        arguments into the request url. Otherwise, we append the until parameter
-        to the end.
+        arguments into the request url. Otherwise, we append the until
+        parameter to the end.
 
         Args:
             paging (bool): Are we paging?
@@ -190,12 +188,14 @@ class FacebookFeed(RESTPolling):
             resp = resp.json()
             err_code = resp.get('error', {}).get('code')
             if (status_code == 404 and err_code in [803, 2500] or
-                status_code == 500 and err_code == 2):
+                    status_code == 500 and err_code == 2):
                 # Page feed requests require only an access token [1] but user
                 # feed requsts require a user access token with read_stream
                 # permission [2].
-                # [1]: https://developers.facebook.com/docs/graph-api/reference/v2.2/page/feed
-                # [2]: https://developers.facebook.com/docs/graph-api/reference/v2.2/user/feed
+                # [1]: https://developers.facebook.com/docs/graph-api/
+                # reference/v2.2/page/feed
+                # [2]: https://developers.facebook.com/docs/graph-api/
+                # reference/v2.2/user/feed
                 self.logger.warning(
                     "Skipping feed: {}".format(self.current_query))
                 execute_retry = False

@@ -1,9 +1,11 @@
-from ..facebook_block import FacebookBlock
 from unittest.mock import patch, MagicMock
 from requests import Response
+from threading import Event
+
 from nio.testing.block_test_case import NIOBlockTestCase
 from nio.util.discovery import not_discoverable
-from threading import Event
+
+from ..facebook_block import FacebookBlock
 
 
 @not_discoverable
@@ -56,6 +58,3 @@ class TestFacebook(NIOBlockTestCase):
         self.assert_num_signals_notified(1)
 
         blk.stop()
-
-
-
