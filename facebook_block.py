@@ -1,21 +1,22 @@
 import requests
 from datetime import datetime
+
 from nio.util.discovery import discoverable
-from .http_blocks.rest.rest_block import RESTPolling
-from nio.properties.string import StringProperty
-from nio.properties.object import ObjectProperty
-from nio.properties.holder import PropertyHolder
-from nio.properties.timedelta import TimeDeltaProperty
-from nio.properties.int import IntProperty
+from nio.properties import (StringProperty, ObjectProperty, PropertyHolder,
+                            TimeDeltaProperty, IntProperty, VersionProperty)
 from nio.signal.base import Signal
+
+from .rest_polling.rest_block import RESTPolling
 
 
 class Creds(PropertyHolder):
     """ Property holder for Facebook credentials.
 
     """
-    consumer_key = StringProperty(title='App ID', default='[[FACEBOOK_APP_ID]]')
-    app_secret = StringProperty(title='App Secret', default='[[FACEBOOK_APP_SECRET]]')
+    consumer_key = StringProperty(title='App ID',
+                                  default='[[FACEBOOK_APP_ID]]')
+    app_secret = StringProperty(title='App Secret',
+                                default='[[FACEBOOK_APP_SECRET]]')
 
 
 class FacebookSignal(Signal):
@@ -23,6 +24,7 @@ class FacebookSignal(Signal):
         super().__init__()
         for k in data:
             setattr(self, k, data[k])
+
 
 @discoverable
 class FacebookBlock(RESTPolling):
@@ -47,6 +49,7 @@ class FacebookBlock(RESTPolling):
     creds = ObjectProperty(Creds, title='Credentials', default=Creds())
     lookback = TimeDeltaProperty(title='Lookback', default={"seconds": 0})
     limit = IntProperty(title='Limit (per poll)', default=10)
+    version = VersionProperty('1.0.0')
 
     def __init__(self):
         super().__init__()
@@ -59,7 +62,6 @@ class FacebookBlock(RESTPolling):
         super().configure(context)
         lb = self._unix_time(datetime.utcnow() - self.lookback())
         self._freshest = [lb] * self._n_queries
-
 
     def _authenticate(self):
         """ Overridden from the RESTPolling block.
@@ -142,8 +144,8 @@ class FacebookBlock(RESTPolling):
 
         Appends the access token to the format string and builds the headers
         dictionary. If paging, we do some string interpolation to get our
-        arguments into the request url. Otherwise, we append the until parameter
-        to the end.
+        arguments into the request url. Otherwise, we append the until
+        parameter to the end.
 
         Args:
             paging (bool): Are we paging?

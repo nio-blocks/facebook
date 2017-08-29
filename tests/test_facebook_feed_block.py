@@ -1,10 +1,12 @@
-from ..facebook_feed_block import FacebookFeed, FeedType
-from ..http_blocks.rest.rest_block import RESTPolling
 from unittest.mock import patch, MagicMock
 from requests import Response
+from threading import Event
+
 from nio.testing.block_test_case import NIOBlockTestCase
 from nio.util.discovery import not_discoverable
-from threading import Event
+
+from ..facebook_feed_block import FacebookFeed, FeedType
+from ..rest_polling.rest_block import RESTPolling
 
 
 @not_discoverable
