@@ -57,7 +57,7 @@
       "retry_limit": {
         "title": "Retry Limit",
         "type": "IntType",
-        "description": "Number if times to retry on a poll.",
+        "description": "Number of times to retry on a poll.",
         "default": 3
       }
     },
@@ -137,7 +137,7 @@
       "retry_limit": {
         "title": "Retry Limit",
         "type": "IntType",
-        "description": "Number if times to retry on a poll.",
+        "description": "Number of times to retry on a poll.",
         "default": 3
       }
     },
