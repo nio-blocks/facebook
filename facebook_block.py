@@ -49,7 +49,7 @@ class FacebookBlock(RESTPolling):
     creds = ObjectProperty(Creds, title='Credentials', default=Creds())
     lookback = TimeDeltaProperty(title='Lookback', default={"seconds": 0})
     limit = IntProperty(title='Limit (per poll)', default=10)
-    version = VersionProperty('1.0.0')
+    version = VersionProperty("1.0.0")
 
     def __init__(self):
         super().__init__()
