@@ -1,3 +1,3 @@
 [submodule "rest_polling"]
 	path = rest_polling
-	url = git@github.com:nio-blocks/rest_polling.git
+	url = git://github.com/nio-blocks/rest_polling.git
