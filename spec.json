@@ -1,6 +1,6 @@
 {
   "nio/FacebookBlock": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Polls Facebook for public posts via Graph API v1.0.",
     "categories": [
       "Social Media"
