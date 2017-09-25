@@ -62,7 +62,7 @@ class FacebookFeed(RESTPolling):
     limit = IntProperty(title='Limit (per poll)', default=10)
     feed_type = SelectProperty(FeedType, default=FeedType.FEED,
                                title='Feed Type')
-    version = VersionProperty('1.0.0')
+    version = VersionProperty("1.0.1")
 
     def __init__(self):
         super().__init__()

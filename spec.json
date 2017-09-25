@@ -77,7 +77,7 @@
     "commands": {}
   },
   "nio/FacebookFeed": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Polls the Facebook graph api ['feed' endpoint](https://developers.facebook.com/docs/graph-api/reference/v2.2/page/feed). To test your *queries* for validity, enter them into the url: `https://www.facebook.com/query/feed`",
     "categories": [
       "Social Media"

@@ -7,6 +7,6 @@
   "nio/FacebookFeed": {
     "language": "Python",
     "url": "git://github.com/nio-blocks/facebook.git",
-    "version": "1.0.0"
+    "version": "1.0.1"
   }
 }
