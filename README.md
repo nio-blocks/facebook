@@ -1,7 +1,7 @@
 FacebookBlock
 =============
 
-Polls Facebook for public posts via Graph API v1.0.
+DEPRECATED <This version of the Facebook API no longer exists> Polls Facebook for public posts via Graph API v1.0.
 
 
 Properties
@@ -43,7 +43,7 @@ Dependencies
 FacebookFeed
 ============
 
-Polls the Facebook graph api ['feed' endpoint](https://developers.facebook.com/docs/graph-api/reference/v2.2/page/feed).
+DEPRECATED <This version of the Facebook API no longer exists>  Polls the Facebook graph api ['feed' endpoint](https://developers.facebook.com/docs/graph-api/reference/v2.2/page/feed).
 To test your *queries* for validity, enter them into the url:
 `https://www.facebook.com/query/feed`
 
